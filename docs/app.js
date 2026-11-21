@@ -249,7 +249,8 @@ async function classify(file, statusEl) {
   const { image_embeds } = await vis(await proc(image));
   const v = image_embeds.data; let n = 0; for (const x of v) n += x * x; n = Math.sqrt(n);
   const best = {};
-  for (const [id, t] of emb) { let s = 0; for (let i = 0; i < t.length; i++) s += t[i] * v[i]; s /= n; if (!(id in best) || s > best[id]) best[id] = s; }
+  // Skip any photo entry the item list doesn't know (e.g. right after an app update) instead of crashing.
+  for (const [id, t] of emb) { if (!ITEM[id]) continue; let s = 0; for (let i = 0; i < t.length; i++) s += t[i] * v[i]; s /= n; if (!(id in best) || s > best[id]) best[id] = s; }
   const ent = Object.entries(best);
   const mx = Math.max(...ent.map(e => e[1]));
   let z = 0; const ex = ent.map(([id, s]) => { const e = Math.exp(100 * (s - mx)); z += e; return [id, e]; });
