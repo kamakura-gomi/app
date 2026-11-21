@@ -1,9 +1,9 @@
-# Publishes the public/ folder to GitLab Pages on every change to the main branch.
+# GitLab backup copy: publishes the docs/ folder to GitLab Pages (the main site is GitHub Pages).
 pages:
   stage: deploy
   image: alpine:latest
   script:
-    - echo "Publishing public/"
+    - cp -r docs public
   artifacts:
     paths:
       - public

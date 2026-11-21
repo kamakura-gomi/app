@@ -1,12 +1,12 @@
-// Regenerates public/embeddings.json from the `clip:` photo prompts in public/data.js.
+// Regenerates docs/embeddings.json from the `clip:` photo prompts in docs/data.js.
 // Only needed when you add or change `clip:` prompts. Usage (from the tools/ folder):
 //   npm install
 //   node embed.mjs
 import { AutoTokenizer, CLIPTextModelWithProjection } from '@huggingface/transformers';
 import fs from 'node:fs';
 
-const DATA = new URL('../public/data.js', import.meta.url);
-const OUT = new URL('../public/embeddings.json', import.meta.url);
+const DATA = new URL('../docs/data.js', import.meta.url);
+const OUT = new URL('../docs/embeddings.json', import.meta.url);
 const { ITEMS } = await import(DATA.href);
 const M = 'Xenova/clip-vit-base-patch32';
 const tok = await AutoTokenizer.from_pretrained(M);

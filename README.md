@@ -20,22 +20,22 @@ Data source: Kamakura City's FY2026 English pamphlet "How to Sort and Dispose of
 
 ## For maintainers (group owners)
 
-The site is published by GitLab Pages: every change to the `main` branch republishes the `public/` folder automatically (see `.gitlab-ci.yml`). Check progress under **Build → Pipelines**.
+The site is published by **GitHub Pages** straight from the `docs/` folder of the `main` branch (Settings → Pages → "Deploy from a branch", `main` / `/docs`). Every change to `main` republishes it within a minute or two. A backup copy also lives on GitLab (`kamakura-gomi-group/app`).
 
-**Updating the rules** (e.g. when the city publishes a new pamphlet each April): open `public/data.js` on gitlab.com, click **Edit**, change it, and commit to `main`. No tools are needed.
+**Updating the rules** (e.g. when the city publishes a new pamphlet each April): open `docs/data.js` on github.com, click the ✏️ pencil, change it, and click **Commit changes** to `main`. No tools are needed.
 - `CATEGORIES`: each bin's bag type and instructions.
 - `ITEMS`: every item, the bin it goes to (`cat`), and optional notes.
 - `DISTRICTS`: collection days. Weekdays are 1 = Mon … 5 = Fri. `nc` / `pg` are the "nth weekday of the month" for Non-Combustible (+ Hazardous + Oil) and Plastic Goods, and `md` is that weekday.
 
-**After changing anything in `public/`**, also bump the cache version in `public/sw.js` (`kg-shell-v1` → `kg-shell-v2`). That makes phones pick up the new version.
+**After changing anything in `docs/`**, also bump the cache version in `docs/sw.js` (`kg-shell-v1` → `kg-shell-v2`). That makes phones pick up the new version.
 
-**Adding photo recognition for a new item**: add `clip: ['a short description of how it looks']` to the item, then regenerate `public/embeddings.json` on a computer with Node.js:
+**Adding photo recognition for a new item**: add `clip: ['a short description of how it looks']` to the item, then regenerate `docs/embeddings.json` on a computer with Node.js:
 
 ```bash
 cd tools && npm install && node embed.mjs
 ```
 
 **Layout**
-- `public/`: the app itself (HTML/CSS/JS, `data.js`, icons).
-- `public/models/`, `public/lib/`: the on-device image model (CLIP ViT-B/32, quantized) and runtime (transformers.js 3.0.2). Don't edit these.
+- `docs/`: the app itself (HTML/CSS/JS, `data.js`, icons).
+- `docs/models/`, `docs/lib/`: the on-device image model (CLIP ViT-B/32, quantized) and runtime (transformers.js 3.0.2). Don't edit these.
 - `tools/`: the script that pre-computes photo-matching data.
