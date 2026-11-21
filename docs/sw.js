@@ -1,12 +1,12 @@
 // Offline support. App files: network-first (so updates arrive), cache fallback.
 // Big files (model + runtime): cache-first, kept in their own cache across app updates.
-const SHELL = 'kg-shell-v2';
+const SHELL = 'kg-shell-v3';
 const BIG = 'kg-big-v1';
 const SHELL_FILES = ['./', './index.html', './styles.css', './app.js', './data.js', './embeddings.json',
   './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== SHELL && k !== BIG).map(k => caches.delete(k))))
@@ -29,7 +29,9 @@ self.addEventListener('fetch', e => {
   e.respondWith((async () => {
     const c = await caches.open(SHELL);
     try {
-      const res = await Promise.race([fetch(e.request), new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 3500))]);
+      // cache: 'no-cache' skips the browser's HTTP cache (GitHub Pages sets 10 min), so updates show up at once
+      const res = await Promise.race([fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 3500))]);
       if (res.ok) c.put(e.request, res.clone());
       return res;
     } catch {

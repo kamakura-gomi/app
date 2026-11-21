@@ -27,7 +27,7 @@ The site is published by **GitHub Pages** straight from the `docs/` folder of th
 - `ITEMS`: every item, the bin it goes to (`cat`), and optional notes.
 - `DISTRICTS`: collection days. Weekdays are 1 = Mon … 5 = Fri. `nc` / `pg` are the "nth weekday of the month" for Non-Combustible (+ Hazardous + Oil) and Plastic Goods, and `md` is that weekday.
 
-**After changing anything in `docs/`**, also bump the cache version in `docs/sw.js` (`kg-shell-v1` → `kg-shell-v2`). That makes phones pick up the new version.
+**After changing anything in `docs/`**, also bump the cache version in `docs/sw.js` (e.g. `kg-shell-v3` → `kg-shell-v4`). That makes phones pick up the new version.
 
 **Adding photo recognition for a new item**: add `clip: ['a short description of how it looks']` to the item, then regenerate `docs/embeddings.json` on a computer with Node.js:
 
