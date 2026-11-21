@@ -1,6 +1,6 @@
 // Offline support. App files: network-first (so updates arrive), cache fallback.
 // Big files (model + runtime): cache-first, kept in their own cache across app updates.
-const SHELL = 'kg-shell-v3';
+const SHELL = 'kg-shell-v4';
 const BIG = 'kg-big-v1';
 const SHELL_FILES = ['./', './index.html', './styles.css', './app.js', './data.js', './embeddings.json',
   './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];

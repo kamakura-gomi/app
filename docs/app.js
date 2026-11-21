@@ -1,4 +1,4 @@
-import { CATEGORIES, ITEMS, DISTRICTS, CONTACTS, SOURCE_NOTE, TOWNS } from './data.js';
+import { CATEGORIES, GROUPS, ITEMS, DISTRICTS, CONTACTS, SOURCE_NOTE, TOWNS } from './data.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -63,11 +63,16 @@ function ruleText(cat) {
 }
 
 /* ---------------- Rendering helpers ---------------- */
-function badge(cat, sm) {
-  const c = CATEGORIES[cat];
-  return `<div class="badge${sm ? ' sm' : ''}" style="background:${c.color}"><span class="bi">${c.icon}</span><div><b>${esc(c.en)}</b><small>${esc(c.ja)}</small></div></div>`;
+// Group line shown above the bin name for recyclables & special items (Burnable/Non-burnable are their own group).
+function groupLabel(cat) {
+  const c = CATEGORIES[cat], g = GROUPS[c.group];
+  return (c.group === 'recyclable' || c.group === 'special') ? `${g.icon} ${g.en} · ${g.ja}` : '';
 }
-function tag(cat) { const c = CATEGORIES[cat]; return `<span class="tag" style="background:${c.color}">${esc(c.short)} ${esc(c.ja)}</span>`; }
+function badge(cat, sm) {
+  const c = CATEGORIES[cat], gl = groupLabel(cat);
+  return `<div class="badge${sm ? ' sm' : ''}" style="background:${c.color}"><span class="bi">${c.icon}</span><div>${gl ? `<span class="grp">${esc(gl)}</span>` : ''}<b>${esc(c.en)}</b><small>${esc(c.ja)}</small></div></div>`;
+}
+function tag(cat) { const c = CATEGORIES[cat]; return `<span class="tag" style="background:${c.color}">${c.group === 'recyclable' ? '♻️ ' : ''}${esc(c.short)} ${esc(c.ja)}</span>`; }
 function catDetails(cat, open) {
   const c = CATEGORIES[cat];
   return `<details class="card" ${open ? 'open' : ''}><summary>How to put out ${esc(c.en)}</summary>
@@ -80,7 +85,9 @@ function itemCard(it, conf) {
   let h = `<div class="card item"><h2>${esc(it.en)}</h2><div class="ja">${esc(it.ja)}</div>`;
   if (conf != null) h += `<div class="conf">${conf >= 0.45 ? '✓ Good match' : '⚠️ Not sure — check the other options below'} · ${Math.round(conf * 100)}% sure of the bin</div>`;
   if (it.special === 'pet') { h += petPanel(); h += '</div>'; return h; }
+  if (it.film) { h += plasticPanel(); if (it.note) h += `<div class="note">${esc(it.note)}</div>`; h += '</div>' + catDetails(cat); return h; }
   h += badge(cat) + nextText(cat);
+  if (cat === 'plastic_cp') h += `<div class="note">♻️ Only if it’s <b>simple plastic</b>. Lined, double-layered (silver/foil inside, paper + plastic) or very dirty → 🔥 <b>Burnable</b>.</div>`;
   if (it.note) h += `<div class="note">${esc(it.note)}</div>`;
   if (it.house) h += `<div class="house">★ House rule</div>`;
   if (!['large', 'not_city', 'plant'].includes(cat)) h += `<p class="small muted">📏 Is it 50 cm or more in any direction? Then it is usually <b>Large Waste</b> (reservation + sticker).</p>`;
@@ -106,7 +113,7 @@ function petVerdict() {
   let h;
   if (!s.clear) {
     h = badge('combustible') + nextText('combustible') +
-      `<div class="note">Coloured PET bottles can’t be recycled in Japan → put the whole bottle in a paid bag as <b>Combustible Waste</b>.</div>`;
+      `<div class="note">Coloured PET bottles can’t be recycled in Japan → put the whole bottle in a paid bag as 🔥 <b>Burnable</b>.</div>`;
   } else if (s.white) {
     h = badge('plastic_cp') + nextText('plastic_cp') +
       `<div class="note">Because the white screw top is <b>not PET</b>, the <b>whole bottle</b> goes in <b>Plastic Containers &amp; Packaging</b> — NOT in the PET bag. Empty and rinse it first.</div><div class="house">★ House rule</div>`;
@@ -126,7 +133,30 @@ function petVerdict() {
     $$('button', seg).forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === s[k]));
   });
 }
+/* ---------------- Simple vs lined plastic checker ---------------- */
+function plasticPanel() {
+  return `<div class="pet" id="plas">
+    <h3>🛍️ Plastic bag / wrapper — one quick check</h3>
+    <div class="q"><div>Is it simple plastic, or lined / double-layered?</div>
+      <p class="small muted" style="margin:0 0 8px">Lined = shiny silver or foil inside, or layers of paper + plastic you can peel apart (many chips, coffee and refill bags).</p>
+      <div class="seg" data-k="lined"><button data-v="0">Simple plastic</button><button data-v="1">Lined / double layer</button></div></div>
+    <div class="verdict" id="plas-verdict"></div>
+  </div>`;
+}
+function wirePlastic() {
+  const p = $('#plas'); if (!p) return;
+  const show = lined => {
+    $('#plas-verdict').innerHTML = lined
+      ? badge('combustible') + nextText('combustible') + `<div class="note">Not simple plastic → 🔥 <b>Burnable</b> (paid bag).</div><div class="house">★ House rule</div>`
+      : badge('plastic_cp') + nextText('plastic_cp') + `<div class="note">Empty it and remove food. Clear or semi-clear bag, no double-bagging.</div>`;
+    $$('button', p).forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === lined));
+  };
+  $('.seg', p).addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(b.dataset.v === '1'); });
+  show(false);
+}
+
 function wirePet() {
+  wirePlastic();
   const p = $('#pet'); if (!p) return;
   petState = { clear: true, white: false };
   $$('.seg', p).forEach(seg => seg.addEventListener('click', e => {
@@ -186,6 +216,10 @@ function loadModel(onProgress) {
       fetch('./embeddings.json').then(r => r.json()),
     ]);
     store.set('modelReady', true);
+    // Warm-up: the very first run is the slowest, so do it now on a blank image instead of on the user's photo.
+    const c = document.createElement('canvas'); c.width = c.height = 224;
+    c.getContext('2d').fillRect(0, 0, 224, 224);
+    await vis(await proc(await T.RawImage.fromCanvas(c)));
     return { T, proc, vis, emb };
   })().catch(e => { modelP = null; throw e; });
   return modelP;
@@ -195,7 +229,7 @@ function progressCb(statusEl) {
     if (p.status === 'progress' && p.file && p.file.endsWith('.onnx')) statusEl.textContent = `Loading recognizer… ${Math.round(p.progress)}%`;
   };
 }
-async function downscale(file, max = 448) {
+async function downscale(file, max = 288) {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image(); img.src = url; await img.decode();
@@ -255,10 +289,19 @@ $('#lib').addEventListener('change', e => { onPhoto(e.target.files[0]); e.target
 $('#again').addEventListener('click', () => { $('#scan-result').hidden = true; $('#scan-start').hidden = false; $('#cam').click(); });
 $('#to-search').addEventListener('click', () => go('search'));
 
+// Load the recognizer in the background as soon as the app opens, so it is ready before the first photo.
+function preload() {
+  const st = $('#ai-status');
+  st.textContent = '⏳ Getting photo recognition ready…';
+  const t0 = performance.now();
+  loadModel(() => { })
+    .then(() => { st.textContent = '✅ Photo recognition ready'; console.log('recognizer ready in', Math.round(performance.now() - t0), 'ms'); })
+    .catch(e => { st.textContent = ''; console.error(e); });
+}
 async function renderModelBanner() {
   const el = $('#model-banner');
   const ready = await isModelCached();
-  if (ready) { el.hidden = true; return; }
+  if (ready) { el.hidden = true; setTimeout(preload, 300); return; }
   el.hidden = false;
   el.innerHTML = `<b>One-time setup:</b> photo recognition needs a ~105 MB download (best on Wi-Fi). After that it works offline.
     <button class="btn wide" id="dl-model">Download now</button><progress id="dl-prog" max="100" value="0" hidden></progress>`;
@@ -267,6 +310,7 @@ async function renderModelBanner() {
     try {
       await loadModel(p => { if (p.status === 'progress' && p.file?.endsWith('.onnx')) pr.value = p.progress; });
       el.innerHTML = '✅ Photo recognition is ready and works offline.';
+      $('#ai-status').textContent = '✅ Photo recognition ready';
       setTimeout(() => (el.hidden = true), 3000);
     } catch (e) { b.disabled = false; b.textContent = 'Retry download'; pr.hidden = true; console.error(e); }
   });
@@ -299,8 +343,11 @@ function listHTML(items) {
 function renderSearch() {
   const q = $('#q').value.trim(), out = $('#search-out');
   if (!q) {
-    out.innerHTML = `<p class="small muted">Or browse by bin:</p><div class="catgrid">${Object.entries(CATEGORIES).map(([k, c]) =>
-      `<button data-cat="${k}" style="background:${c.color}"><b>${c.icon} ${esc(c.en)}</b><small>${esc(c.ja)}</small></button>`).join('')}</div>`;
+    out.innerHTML = `<p class="small muted">Or browse by bin:</p>` + Object.entries(GROUPS).map(([gk, g]) => {
+      const cats = Object.entries(CATEGORIES).filter(([, c]) => c.group === gk);
+      return `<h3 class="grouph">${g.icon} ${esc(g.en)} <span class="muted small">${esc(g.ja)}</span></h3><div class="catgrid">${cats.map(([k, c]) =>
+        `<button data-cat="${k}" style="background:${c.color}"><b>${c.icon} ${esc(c.en)}</b><small>${esc(c.ja)}</small></button>`).join('')}</div>`;
+    }).join('');
     return;
   }
   const r = search(q);
@@ -523,17 +570,18 @@ function renderGuide() {
   g.innerHTML = `<h2>Kamakura sorting guide</h2>
   <div class="card"><b>The basics</b><ul class="steps">
     <li>Put everything out <b>by 8:30 a.m.</b> on the collection day — not the night before.</li>
-    <li><b>Combustible</b> is collected <b>door-to-door</b> (since April 2026): on your own property facing the street, in a lidded, weighted container. Everything else goes to your usual <b>clean station</b>.</li>
-    <li><b>Combustible & Non-Combustible</b> need the city’s <b>paid bags</b>. Most others use clear / semi-clear bags (≤45 L). Paper goes in paper bags or tied with string. Cans & glass go loose in the yellow/blue containers.</li>
+    <li><b>Burnable</b> is collected <b>door-to-door</b> (since April 2026): on your own property facing the street, in a lidded, weighted container. Everything else goes to your usual <b>clean station</b>.</li>
+    <li><b>Burnable & Non-burnable</b> need the city’s <b>paid bags</b>. Most others use clear / semi-clear bags (≤45 L). Paper goes in paper bags or tied with string. Cans & glass go loose in the yellow/blue containers.</li>
     <li>Max <b>5 bags or bundles</b> per household per day.</li>
     <li>Anything <b>50 cm or longer</b> is usually <b>Large Waste</b> (book it, buy a sticker).</li>
     <li>“2nd Tuesday” means the 2nd Tuesday of the month, not Tuesday of the 2nd week.</li>
     <li>Unsorted waste is left behind with a sticker — the person who put it out must take it back.</li>
   </ul></div>
-  ${Object.entries(CATEGORIES).map(([k, c]) => `<details class="card guide-cat" style="border-left-color:${c.color}">
+  ${Object.entries(GROUPS).map(([gk, g]) => `<h3 class="grouph">${g.icon} ${esc(g.en)} <span class="muted small">${esc(g.ja)}</span></h3>` +
+    Object.entries(CATEGORIES).filter(([, c]) => c.group === gk).map(([k, c]) => `<details class="card guide-cat" style="border-left-color:${c.color}">
     <summary><span class="gi">${c.icon}</span><div><b>${esc(c.en)}</b><div class="small muted">${esc(c.ja)}${sched && c.sched ? ' · ' + ruleText(k) : ''}</div></div></summary>
     <p><b>Bag:</b> ${esc(c.bag)}</p><ul class="steps">${c.howto.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
-    <p class="ex"><b>Examples:</b> ${ITEMS.filter(i => i.cat === k).map(i => esc(i.en)).join(' · ')}</p></details>`).join('')}
+    <p class="ex"><b>Examples:</b> ${ITEMS.filter(i => i.cat === k).map(i => esc(i.en)).join(' · ')}</p></details>`).join('')).join('')}
   <div class="card contacts"><b>Phone numbers</b>${CONTACTS.map(([n, t]) => `<div>${esc(n)}<br><a href="tel:${t.replace(/-/g, '')}">${t}</a></div>`).join('')}
     <p class="small muted">The city also has a Japanese-only LINE account “Kamakura Waste Info Lookup” for large-waste booking.</p></div>
   <p class="small muted">${esc(SOURCE_NOTE)} Items marked ★ are house rules.</p>`;

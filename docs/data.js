@@ -6,10 +6,18 @@
 export const SOURCE_NOTE =
   'Based on Kamakura City’s FY2026 sorting pamphlet (April 2026). Rules can change — when in doubt, check the city website or call 0467-61-3396.';
 
+// The three main kinds of trash, plus items that need special handling.
+export const GROUPS = {
+  burnable: { en: 'Burnable', ja: '燃やすごみ', icon: '🔥' },
+  nonburnable: { en: 'Non-burnable', ja: '燃えないごみ', icon: '🍳' },
+  recyclable: { en: 'Recyclables', ja: '資源物', icon: '♻️' },
+  special: { en: 'Special handling', ja: 'その他', icon: '⚠️' },
+};
+
 // Weekday numbers: 1 = Mon … 5 = Fri
 export const CATEGORIES = {
   combustible: {
-    en: 'Combustible Waste', ja: '燃やすごみ', short: 'Burnable', color: '#d9653b', icon: '🔥',
+    group: 'burnable', en: 'Burnable (Combustible Waste)', ja: '燃やすごみ', short: 'Burnable', color: '#d9653b', icon: '🔥',
     sched: 'comb',
     bag: 'Designated PAID bag (yellow city bag, 5/10/20/40 L) — tie the handles shut.',
     howto: [
@@ -20,7 +28,7 @@ export const CATEGORIES = {
     ],
   },
   noncombustible: {
-    en: 'Non-Combustible Waste', ja: '燃えないごみ', short: 'Non-burnable', color: '#8a6bb8', icon: '🍳',
+    group: 'nonburnable', en: 'Non-burnable (Non-Combustible Waste)', ja: '燃えないごみ', short: 'Non-burnable', color: '#8a6bb8', icon: '🍳',
     sched: 'monthly',
     bag: 'Designated PAID bag. Odd shapes under 50 cm: tie a 40 L paid bag to the item.',
     howto: [
@@ -30,11 +38,12 @@ export const CATEGORIES = {
     ],
   },
   plastic_cp: {
-    en: 'Plastic Containers & Packaging', ja: '容器包装プラスチック', short: 'Plastic packaging', color: '#e0708a', icon: '🛍️',
+    group: 'recyclable', en: 'Plastic Containers & Packaging', ja: '容器包装プラスチック', short: 'Plastic packaging', color: '#e0708a', icon: '🛍️',
     sched: 'pcp',
     bag: 'Clear or semi-clear bag (up to 45 L). Do NOT double-bag.',
     howto: [
-      'Look for the プラ mark.',
+      'SIMPLE plastic only — including PET bottle caps, rings and labels. Look for the プラ mark.',
+      '★ Lined or double-layered packaging (silver/foil inside, or paper + plastic layers) → Burnable.',
       'Remove food so no solids remain — no need to scrub with detergent.',
       'Very greasy or smelly containers (curry, retort pouches, kimchi) → Combustible Waste instead.',
       'Hard-to-clean tube openings: cut off and put in Combustible.',
@@ -42,7 +51,7 @@ export const CATEGORIES = {
     ],
   },
   plastic_goods: {
-    en: 'Plastic Goods', ja: '製品プラスチック', short: 'Plastic goods', color: '#3f7fbf', icon: '🪣',
+    group: 'recyclable', en: 'Plastic Goods', ja: '製品プラスチック', short: 'Plastic goods', color: '#3f7fbf', icon: '🪣',
     sched: 'pg',
     bag: 'Clear or semi-clear bag (up to 45 L). Items under 50 cm that don’t fit: put out as is with a note “SEIHIN PURASUCHIKKU”.',
     howto: [
@@ -53,7 +62,7 @@ export const CATEGORIES = {
     ],
   },
   paper: {
-    en: 'Paper', ja: '紙類', short: 'Paper', color: '#c9a227', icon: '📰',
+    group: 'recyclable', en: 'Paper', ja: '紙類', short: 'Paper', color: '#c9a227', icon: '📰',
     sched: 'paper',
     bag: 'Mixed paper: in a PAPER bag (closed with tape/staples). Cardboard, newspapers, magazines, cartons: tie with string. Never in plastic bags.',
     howto: [
@@ -65,7 +74,7 @@ export const CATEGORIES = {
     ],
   },
   fabric: {
-    en: 'Fabric Items', ja: '布類', short: 'Fabric', color: '#7fa33a', icon: '👕',
+    group: 'recyclable', en: 'Fabric Items', ja: '布類', short: 'Fabric', color: '#7fa33a', icon: '👕',
     sched: 'paper',
     bag: 'Clear or semi-clear bag (up to 45 L), tied.',
     howto: [
@@ -76,7 +85,7 @@ export const CATEGORIES = {
     ],
   },
   plant: {
-    en: 'Plant Trimmings', ja: '植木剪定材', short: 'Garden', color: '#3c9a5f', icon: '🌿',
+    group: 'recyclable', en: 'Plant Trimmings', ja: '植木剪定材', short: 'Garden', color: '#3c9a5f', icon: '🌿',
     sched: 'plant',
     bag: 'Clear/semi-clear bag, or bundles tied with string (each under 50 cm long, 15 cm thick).',
     howto: [
@@ -87,7 +96,7 @@ export const CATEGORIES = {
     ],
   },
   cans_bottles: {
-    en: 'Food & Beverage Cans and Bottles', ja: '缶・びん', short: 'Cans & glass', color: '#6d6a9c', icon: '🥫',
+    group: 'recyclable', en: 'Food & Beverage Cans and Bottles', ja: '缶・びん', short: 'Cans & glass', color: '#6d6a9c', icon: '🥫',
     sched: 'cans',
     bag: 'NO bag — cans in the YELLOW container, glass bottles in the BLUE container at the clean station.',
     howto: [
@@ -98,7 +107,7 @@ export const CATEGORIES = {
     ],
   },
   pet: {
-    en: 'PET Bottles', ja: 'ペットボトル', short: 'PET', color: '#3aa3c9', icon: '🧴',
+    group: 'recyclable', en: 'PET Bottles', ja: 'ペットボトル', short: 'PET', color: '#3aa3c9', icon: '🧴',
     sched: 'pet',
     bag: 'Clear or semi-clear bag (up to 45 L), tied.',
     howto: [
@@ -108,7 +117,7 @@ export const CATEGORIES = {
     ],
   },
   oil: {
-    en: 'Used Cooking Oil', ja: '使用済み食用油', short: 'Cooking oil', color: '#b8892a', icon: '🫗',
+    group: 'recyclable', en: 'Used Cooking Oil', ja: '使用済み食用油', short: 'Cooking oil', color: '#b8892a', icon: '🫗',
     sched: 'monthly',
     bag: 'Inside a capped PET bottle (500 ml preferred) — NOT in a bag.',
     howto: [
@@ -120,7 +129,7 @@ export const CATEGORIES = {
     ],
   },
   hazardous: {
-    en: 'Hazardous / Toxic Waste', ja: '危険・有害ごみ', short: 'Hazardous', color: '#c23b3b', icon: '⚠️',
+    group: 'special', en: 'Hazardous / Toxic Waste', ja: '危険・有害ごみ', short: 'Hazardous', color: '#c23b3b', icon: '⚠️',
     sched: 'monthly',
     bag: 'Clear or semi-clear bag. Batteries separate from other items.',
     howto: [
@@ -133,7 +142,7 @@ export const CATEGORIES = {
     ],
   },
   large: {
-    en: 'Large Waste', ja: '粗大ごみ', short: 'Large', color: '#7a5a43', icon: '🛋️',
+    group: 'special', en: 'Large Waste', ja: '粗大ごみ', short: 'Large', color: '#7a5a43', icon: '🛋️',
     sched: null,
     bag: 'Reservation + paid sticker (300 / 600 / 1,200 yen) from convenience stores, post offices, supermarkets.',
     howto: [
@@ -144,7 +153,7 @@ export const CATEGORIES = {
     ],
   },
   not_city: {
-    en: 'Not collected by the city', ja: '市で収集しないもの', short: 'Not collected', color: '#555555', icon: '🚫',
+    group: 'special', en: 'Not collected by the city', ja: '市で収集しないもの', short: 'Not collected', color: '#555555', icon: '🚫',
     sched: null,
     bag: 'Must go through a shop, manufacturer or licensed company.',
     howto: [
@@ -187,10 +196,10 @@ export const ITEMS = [
     kw: 'perfume cosmetics nail polish glass non-food', clip: ['a glass perfume bottle'], note: 'Not a food/drink bottle → Non-Combustible.' },
 
   // ---------- Plastic containers & packaging ----------
-  { id: 'plastic_bag', en: 'Plastic shopping bag / film', ja: 'レジ袋・ポリ袋', cat: 'plastic_cp',
+  { id: 'plastic_bag', en: 'Plastic shopping bag / film', ja: 'レジ袋・ポリ袋', cat: 'plastic_cp', film: true,
     kw: 'shopping bag plastic bag film wrap poly レジ袋', clip: ['a plastic shopping bag', 'a crumpled plastic bag'] },
-  { id: 'wrap', en: 'Plastic wrap / packaging film', ja: 'ラップ・包装フィルム', cat: 'plastic_cp', kw: 'cling film saran wrap packaging film', clip: ['clear plastic wrap film'] },
-  { id: 'snack_bag', en: 'Snack / chips bag', ja: 'お菓子の袋', cat: 'plastic_cp', kw: 'chips crisps snack bag candy wrapper', clip: ['an empty potato chips bag', 'a snack wrapper'] },
+  { id: 'wrap', en: 'Plastic wrap / packaging film', ja: 'ラップ・包装フィルム', cat: 'plastic_cp', film: true, kw: 'cling film saran wrap packaging film', clip: ['clear plastic wrap film'] },
+  { id: 'snack_bag', en: 'Snack / chips bag', ja: 'お菓子の袋', cat: 'plastic_cp', film: true, kw: 'chips crisps snack bag candy wrapper', clip: ['an empty potato chips bag', 'a snack wrapper'] },
   { id: 'tray', en: 'Meat / fish tray', ja: '食品トレイ', cat: 'plastic_cp', kw: 'tray styrofoam tray meat fish supermarket', clip: ['a white styrofoam meat tray', 'a plastic food tray'], note: 'Rinse off food.' },
   { id: 'styrofoam', en: 'Styrofoam packing', ja: '発泡スチロール', cat: 'plastic_cp', kw: 'polystyrene foam packing cushioning', clip: ['styrofoam packing material'], note: 'Can be put out as is even if 50 cm or larger.' },
   { id: 'bubble', en: 'Bubble wrap', ja: 'プチプチ（緩衝材）', cat: 'plastic_cp', kw: 'air cushion packing bubble', clip: ['bubble wrap'] },
@@ -203,11 +212,15 @@ export const ITEMS = [
   { id: 'clamshell', en: 'Fruit / strawberry pack', ja: 'いちごのパック', cat: 'plastic_cp', kw: 'clamshell berry strawberry tomato pack', clip: ['a clear plastic fruit clamshell container'] },
   { id: 'fruit_net', en: 'Fruit net bag', ja: '果物のネット', cat: 'plastic_cp', kw: 'mesh net onion orange', clip: ['a plastic mesh net bag for fruit'] },
   { id: 'shampoo', en: 'Shampoo / detergent bottle', ja: 'シャンプーや洗剤の容器', cat: 'plastic_cp', kw: 'conditioner soap detergent bleach body wash pump bottle', clip: ['a plastic shampoo bottle', 'a plastic laundry detergent bottle'], note: 'Just empty it — no need to wash inside.' },
-  { id: 'refill_pouch', en: 'Refill pouch', ja: '詰め替え袋', cat: 'plastic_cp', kw: 'refill pack pouch tsumekae', clip: ['a plastic refill pouch'] },
-  { id: 'tube', en: 'Toothpaste / mayonnaise tube', ja: 'チューブ', cat: 'plastic_cp', kw: 'toothpaste mayo ketchup wasabi tube', clip: ['a squeezed toothpaste tube', 'a mayonnaise bottle'], note: 'If the opening is hard to clean, cut it off → Combustible.' },
+  { id: 'refill_pouch', en: 'Refill pouch', ja: '詰め替え袋', cat: 'plastic_cp', film: true, kw: 'refill pack pouch tsumekae', clip: ['a plastic refill pouch'] },
+  { id: 'tube', en: 'Toothpaste / mayonnaise tube', ja: 'チューブ', cat: 'plastic_cp', film: true, kw: 'toothpaste mayo ketchup wasabi tube', clip: ['a squeezed toothpaste tube', 'a mayonnaise bottle'], note: 'If the opening is hard to clean, cut it off → Combustible.' },
   { id: 'plastic_lid', en: 'Plastic lid / cap (any bottle)', ja: 'プラスチックのふた', cat: 'plastic_cp', kw: 'lid cap jar lid' },
   { id: 'carton_spout', en: 'Plastic spout of a paper carton', ja: '紙パックの注ぎ口', cat: 'plastic_cp', kw: 'spout milk carton opening' },
   { id: 'medicine_ptp', en: 'Pill blister pack', ja: '薬の包装シート', cat: 'plastic_cp', kw: 'ptp blister tablets pills', clip: ['an empty medicine blister pack'] },
+  { id: 'lined_pouch', en: 'Lined / double-layered packaging (silver inside)', ja: 'アルミ等の複合素材の袋', cat: 'combustible', house: true,
+    kw: 'foil lined aluminium aluminum silver inside double layer laminated multilayer coffee bag chips bag pouch',
+    clip: ['a snack bag with shiny silver foil inside', 'a foil-lined coffee bag', 'a silver aluminum pouch'],
+    note: 'Packaging with a silver/foil lining or paper + plastic layers is not simple plastic → Burnable.' },
   { id: 'retort', en: 'Retort pouch / greasy curry container', ja: 'レトルトパウチ・油汚れの容器', cat: 'combustible', kw: 'curry retort pouch greasy oily kimchi smelly dirty plastic', note: 'Greasy or smelly packaging → Combustible.' },
 
   // ---------- Plastic goods ----------
