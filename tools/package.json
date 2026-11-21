@@ -1,0 +1,8 @@
+{
+  "name": "kamakura-gomi-tools",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@huggingface/transformers": "3.0.2"
+  }
+}

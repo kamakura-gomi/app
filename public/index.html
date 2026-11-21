@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kamakura Gomi</title>
+<meta name="description" content="Sort household trash the Kamakura way — works offline.">
+<meta name="theme-color" content="#2f7d5b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gomi">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>Kamakura Gomi</b><small>鎌倉市 ごみ分別</small></div></div>
+</header>
+
+<main>
+  <!-- SCAN -->
+  <section id="view-scan" class="view active">
+    <div id="today" class="today"></div>
+
+    <div id="scan-start">
+      <label class="bigbtn">
+        <input id="cam" type="file" accept="image/*" capture="environment" hidden>
+        <span class="ico">📷</span><span>Take a photo</span>
+      </label>
+      <label class="btn ghost wide">
+        <input id="lib" type="file" accept="image/*" hidden>
+        🖼️ Choose from photos
+      </label>
+      <p class="hint">Point the camera at one item, close up, on a plain background. The app works completely on this device — nothing is uploaded.</p>
+      <div id="model-banner" class="banner" hidden></div>
+    </div>
+
+    <div id="scan-result" hidden>
+      <div class="preview-wrap"><img id="preview" alt="Your photo"><div id="scan-status" class="status"></div></div>
+      <div id="result-card"></div>
+      <div id="alts" class="alts"></div>
+      <div class="row">
+        <button class="btn" id="again">📷 Scan another</button>
+        <button class="btn ghost" id="to-search">🔍 Search by name</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section id="view-search" class="view">
+    <input id="q" class="search" type="search" placeholder="What are you throwing away?  e.g. battery, 傘, cup" autocomplete="off">
+    <div id="search-out"></div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section id="view-schedule" class="view">
+    <h2>My collection days</h2>
+    <label class="field">District (地区)
+      <select id="district"></select>
+    </label>
+    <p class="small muted">If you live on a district border, your days may differ — trust the sign at your clean station and adjust below.</p>
+    <div id="week"></div>
+    <details id="adjust" class="card">
+      <summary>Adjust days</summary>
+      <div id="adjust-form"></div>
+    </details>
+    <h3>Next 2 weeks</h3>
+    <div id="upcoming"></div>
+
+    <div class="card reminders">
+      <h3>⏰ Reminder alarms</h3>
+      <p class="small">Adds every collection day for the next 12 months to your phone’s own Calendar, with alarms. They ring even with no internet and with this app closed.</p>
+      <div id="rem-cats" class="chips"></div>
+      <label class="check"><input type="checkbox" id="rem-eve" checked> Evening before at <input type="time" id="rem-eve-t" value="20:00"></label>
+      <label class="check"><input type="checkbox" id="rem-morn"> Morning of at <input type="time" id="rem-morn-t" value="07:00" max="08:30"></label>
+      <button class="btn wide" id="rem-go">📅 Add alarms to my Calendar</button>
+      <button class="btn ghost wide" id="rem-share" hidden>Share calendar file…</button>
+      <p class="small muted">iPhone/iPad: tap the button, then “Add All”. If nothing happens inside the home-screen app, open the app in Safari once and tap it there. Android: open the downloaded file with Google Calendar. Re-do this every year (or after you change district).</p>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section id="view-guide" class="view">
+    <div id="guide"></div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="scan" class="on"><span>📷</span>Scan</button>
+  <button data-view="search"><span>🔍</span>Search</button>
+  <button data-view="schedule"><span>📅</span>Days</button>
+  <button data-view="guide"><span>📖</span>Guide</button>
+</nav>
+
+<template id="pet-svg">
+<svg viewBox="0 0 220 150" class="petsvg" aria-label="PET bottle parts">
+  <rect x="66" y="10" width="28" height="16" rx="3" fill="#e0708a"/>
+  <rect x="68" y="27" width="24" height="5" rx="2" fill="#e0708a"/>
+  <path d="M70 33 h20 v10 q16 8 16 26 v66 q0 8 -8 8 h-36 q-8 0 -8 -8 v-66 q0 -18 16 -26z" fill="#bfe6f3" stroke="#3aa3c9" stroke-width="2"/>
+  <rect x="54" y="78" width="52" height="30" fill="#e0708a" opacity=".85"/>
+  <g font-size="11" fill="currentColor">
+    <line x1="96" y1="18" x2="130" y2="18" stroke="currentColor"/><text x="134" y="22">① Cap → プラ</text>
+    <line x1="94" y1="30" x2="130" y2="40" stroke="currentColor"/><text x="134" y="44">② Ring → プラ</text>
+    <line x1="106" y1="92" x2="130" y2="92" stroke="currentColor"/><text x="134" y="96">③ Label → プラ</text>
+    <line x1="106" y1="125" x2="130" y2="125" stroke="currentColor"/><text x="134" y="129">④ Bottle → PET</text>
+  </g>
+</svg>
+</template>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Publishes the public/ folder to GitLab Pages on every change to the main branch.
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Publishing public/"
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
