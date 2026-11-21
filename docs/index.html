@@ -17,7 +17,10 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>Kamakura Gomi</b><small>鎌倉市 ごみ分別</small></div></div>
+  <div class="brand">
+    <button class="brand-link" data-home aria-label="Home"><img src="icons/icon-192.png" alt=""><div><b>Kamakura Gomi</b><small>鎌倉市 ごみ分別</small></div></button>
+    <button class="homebtn" data-home>🏠 Home</button>
+  </div>
 </header>
 
 <main>
@@ -58,7 +61,15 @@
   <!-- SCHEDULE -->
   <section id="view-schedule" class="view">
     <h2>My collection days</h2>
-    <label class="field">District (地区)
+    <div class="card">
+      <label class="field">📍 Type your address
+        <input id="addr" type="text" placeholder="e.g. 鎌倉市長谷2-3-4  or  2-3-4 Hase" autocomplete="street-address" enterkeyhint="search">
+      </label>
+      <button class="btn wide" id="addr-go">Find my district</button>
+      <div id="addr-out"></div>
+      <p class="small muted" style="margin:4px 0 0">Works offline. Your address stays on this phone and isn’t saved.</p>
+    </div>
+    <label class="field">…or choose your district (地区)
       <select id="district"></select>
     </label>
     <p class="small muted">If you live on a district border, your days may differ — trust the sign at your clean station and adjust below.</p>
@@ -89,7 +100,7 @@
 </main>
 
 <nav class="tabs">
-  <button data-view="scan" class="on"><span>📷</span>Scan</button>
+  <button data-view="scan" class="on"><span>🏠</span>Home</button>
   <button data-view="search"><span>🔍</span>Search</button>
   <button data-view="schedule"><span>📅</span>Days</button>
   <button data-view="guide"><span>📖</span>Guide</button>

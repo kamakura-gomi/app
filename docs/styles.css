@@ -100,6 +100,9 @@ details summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
 .field { display: block; font-weight: 600; margin: 8px 0; }
 select, input[type=time] { font: inherit; padding: 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); }
 .field select { display: block; width: 100%; margin-top: 6px; }
+.field input[type=text] { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 17px; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); }
+.homebtn { margin-left: auto; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.brand-link { display: flex; gap: 10px; align-items: center; background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .week { display: grid; grid-template-columns: 52px 1fr; gap: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 .week > div { padding: 8px 10px; border-bottom: 1px solid var(--line); }
 .week .d { font-weight: 700; background: color-mix(in srgb, var(--ink) 5%, var(--card)); }

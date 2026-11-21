@@ -359,6 +359,66 @@ export const DISTRICTS = [
   D('Tamanawa, Shiromeguri, Sekiya', [2, 5], 3, 3, 1, 1, 4, 4, 3, 1),
 ];
 
+// Town names (町名) → district, for "find my district from my address".
+// `ro`: romaji spellings. `split`: [from, to, districtIfInRange, districtOtherwise] by chome.
+// `ask`: the town is split by an area name the address can't show, so the user picks.
+const DN = name => {
+  const i = DISTRICTS.findIndex(d => d.name === name);
+  if (i < 0) throw new Error('Unknown district ' + name);
+  return i;
+};
+const T = (ja, ro, district, extra = {}) => ({ ja, ro, d: district == null ? null : DN(district), ...extra });
+export const TOWNS = [
+  T('十二所', ['juniso', 'juunisho', 'junisho', 'juunisou'], 'Juniso, Jomyoji, Nikaidoh'),
+  T('浄明寺', ['jomyoji', 'joumyouji', 'jomyouji'], 'Juniso, Jomyoji, Nikaidoh'),
+  T('二階堂', ['nikaido', 'nikaidoh', 'nikaidou'], 'Juniso, Jomyoji, Nikaidoh'),
+  T('西御門', ['nishimikado'], 'Nishi Mikado, Yukinoshita, Ogigayatsu, Komachi, Onarimachi, Sasuke'),
+  T('雪ノ下', ['yukinoshita'], 'Nishi Mikado, Yukinoshita, Ogigayatsu, Komachi, Onarimachi, Sasuke'),
+  T('扇ガ谷', ['ogigayatsu', 'ougigayatsu', 'ohgigayatsu'], 'Nishi Mikado, Yukinoshita, Ogigayatsu, Komachi, Onarimachi, Sasuke'),
+  T('小町', ['komachi'], 'Nishi Mikado, Yukinoshita, Ogigayatsu, Komachi, Onarimachi, Sasuke'),
+  T('御成町', ['onarimachi', 'onaricho', 'onarichou'], 'Nishi Mikado, Yukinoshita, Ogigayatsu, Komachi, Onarimachi, Sasuke'),
+  T('佐助', ['sasuke'], 'Nishi Mikado, Yukinoshita, Ogigayatsu, Komachi, Onarimachi, Sasuke'),
+  T('大町', ['omachi', 'oomachi', 'ohmachi'], 'Omachi, Zaimokuza'),
+  T('材木座', ['zaimokuza'], 'Omachi, Zaimokuza'),
+  T('由比ガ浜', ['yuigahama'], 'Yuigahama, Sasamemachi'),
+  T('笹目町', ['sasamemachi', 'sasamecho'], 'Yuigahama, Sasamemachi'),
+  T('長谷', ['hase'], 'Hase, Gokurakuji, Sakanoshita'),
+  T('極楽寺', ['gokurakuji'], 'Hase, Gokurakuji, Sakanoshita'),
+  T('坂ノ下', ['sakanoshita'], 'Hase, Gokurakuji, Sakanoshita'),
+  T('稲村ガ崎', ['inamuragasaki'], 'Inamuragasaki, Shichirigahama-higashi'),
+  T('七里ガ浜東', ['shichirigahamahigashi'], 'Inamuragasaki, Shichirigahama-higashi', { en: 'Shichirigahama-higashi' }),
+  T('七里ガ浜', ['shichirigahama'], 'Koshigoe (other), Tsu, Shichirigahama'),
+  T('腰越', ['koshigoe'], null, { split: [1, 5, DN('Koshigoe (1–5-chome), Tsu-nishi'), DN('Koshigoe (other), Tsu, Shichirigahama')] }),
+  T('津西', ['tsunishi'], 'Koshigoe (1–5-chome), Tsu-nishi', { en: 'Tsu-nishi' }),
+  T('津', ['tsu'], 'Koshigoe (other), Tsu, Shichirigahama', { short: true }),
+  T('西鎌倉', ['nishikamakura'], 'Nishi-kamakura, Kamakurayama', { en: 'Nishi-kamakura' }),
+  T('鎌倉山', ['kamakurayama'], 'Nishi-kamakura, Kamakurayama'),
+  T('梶原', ['kajiwara'], null, { split: [1, 5, DN('Kajiwara (1–5-chome), Terabun (1–3-chome), Yamasaki (Uguisuyama)'), DN('Kajiwara (other than 1–5-chome), Terabun (other than 1–3-chome)')] }),
+  T('寺分', ['terabun'], null, { split: [1, 3, DN('Kajiwara (1–5-chome), Terabun (1–3-chome), Yamasaki (Uguisuyama)'), DN('Kajiwara (other than 1–5-chome), Terabun (other than 1–3-chome)')] }),
+  T('上町屋', ['kamimachiya'], 'Kamimachiya, Tebiro'),
+  T('手広', ['tebiro'], 'Kamimachiya, Tebiro'),
+  T('笛田', ['fueda'], 'Fueda, Tokiwa'),
+  T('常盤', ['tokiwa'], 'Fueda, Tokiwa'),
+  T('山崎', ['yamasaki', 'yamazaki'], null, {
+    ask: 'Is your home in the Uguisuyama area of Yamasaki?',
+    choices: [['Yes, Uguisuyama', DN('Kajiwara (1–5-chome), Terabun (1–3-chome), Yamasaki (Uguisuyama)')], ['No, other Yamasaki', DN('Yamasaki (other than Uguisuyama), Dai (1–5-chome)')]],
+    hint: ['uguisu', '鶯'],
+  }),
+  T('山ノ内', ['yamanouchi', 'yamanoushi'], 'Yamanouchi'),
+  T('台', ['dai'], null, { short: true, split: [1, 5, DN('Yamasaki (other than Uguisuyama), Dai (1–5-chome)'), DN('Dai (other than 1–5-chome)')] }),
+  T('小袋谷', ['kobukuroya'], 'Kobukuroya'),
+  T('大船', ['ofuna', 'oofuna', 'ohfuna'], null, { split: [6, 6, DN('Iwase, Ofuna 6-chome'), DN('Ofuna (except 6-chome)')] }),
+  T('高野', ['takano'], 'Takano, Imaizumi, Imaizumi-dai'),
+  T('今泉台', ['imaizumidai'], 'Takano, Imaizumi, Imaizumi-dai', { en: 'Imaizumi-dai' }),
+  T('今泉', ['imaizumi'], 'Takano, Imaizumi, Imaizumi-dai'),
+  T('岩瀬', ['iwase'], 'Iwase, Ofuna 6-chome'),
+  T('岡本', ['okamoto'], 'Okamoto'),
+  T('植木', ['ueki'], 'Ueki'),
+  T('玉縄', ['tamanawa'], 'Tamanawa, Shiromeguri, Sekiya'),
+  T('城廻', ['shiromeguri'], 'Tamanawa, Shiromeguri, Sekiya'),
+  T('関谷', ['sekiya'], 'Tamanawa, Shiromeguri, Sekiya'),
+];
+
 export const CONTACTS = [
   ['Sorting questions (Resource Management Div.)', '0467-61-3396'],
   ['Large waste reservations / clean stations (Environment Center)', '0467-53-8321'],

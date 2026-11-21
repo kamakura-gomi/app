@@ -1,4 +1,4 @@
-import { CATEGORIES, ITEMS, DISTRICTS, CONTACTS, SOURCE_NOTE } from './data.js';
+import { CATEGORIES, ITEMS, DISTRICTS, CONTACTS, SOURCE_NOTE, TOWNS } from './data.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -145,7 +145,13 @@ function go(view) {
   if (view === 'search') setTimeout(() => $('#q').focus(), 50);
   window.scrollTo(0, 0);
 }
-$$('.tabs button').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+function goHome() {
+  $('#scan-result').hidden = true; $('#scan-start').hidden = false;
+  $('#q').value = ''; renderSearch();
+  go('scan');
+}
+$$('[data-home]').forEach(b => b.addEventListener('click', goHome));
+$$('.tabs button').forEach(b => b.addEventListener('click', () => b.dataset.view === 'scan' ? goHome() : go(b.dataset.view)));
 document.addEventListener('click', e => { const a = e.target.closest('[data-go]'); if (a) { e.preventDefault(); go(a.dataset.go); } });
 
 /* ---------------- Today banner ---------------- */
@@ -318,16 +324,86 @@ $('#search-out').addEventListener('click', e => {
 });
 
 /* ---------------- Schedule view ---------------- */
+function setDistrict(i) {
+  if (i == null || i === '') { sched = null; store.set('sched', null); }
+  else { sched = { ...structuredClone(DISTRICTS[+i]), idx: +i, adjusted: false }; store.set('sched', sched); }
+  $('#district').value = sched ? String(sched.idx) : '';
+  renderSchedule(); renderToday();
+}
 function districtSelect() {
   const sel = $('#district');
   sel.innerHTML = `<option value="">— Choose your district —</option>` + DISTRICTS.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join('');
   sel.value = sched ? String(sched.idx) : '';
-  sel.addEventListener('change', () => {
-    if (sel.value === '') { sched = null; store.set('sched', null); }
-    else { sched = { ...structuredClone(DISTRICTS[+sel.value]), idx: +sel.value, adjusted: false }; store.set('sched', sched); }
-    renderSchedule(); renderToday();
-  });
+  sel.addEventListener('change', () => { setDistrict(sel.value); $('#addr-out').innerHTML = ''; });
 }
+
+/* ---------------- Address → district (offline) ---------------- */
+const KNUM = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+const toNum = s => /^\d+$/.test(s) ? +s : (s.length === 1 ? KNUM[s] : s === '十' ? 10 : NaN);
+const BY_JA = [...TOWNS].sort((a, b) => b.ja.length - a.ja.length);
+const BY_RO = [...TOWNS].sort((a, b) => Math.max(...b.ro.map(x => x.length)) - Math.max(...a.ro.map(x => x.length)));
+// chome: number (1–9), 'none' (address has a lot number instead), or undefined (no number given)
+function chomeFrom(n, explicit) { return isNaN(n) ? undefined : (explicit || n <= 9) ? n : 'none'; }
+function findDistrict(text) {
+  if (!text || !text.trim()) return null;
+  const raw = text.normalize('NFKC');
+  let town = null, chome;
+  // Japanese: 鎌倉市長谷2-3-4 / 長谷二丁目
+  const ja = raw.replace(/\s+/g, '').replace(/〒?\d{3}-?\d{4}/, '').replace(/[ヶケヵが]/g, 'ガ').replace(/の/g, 'ノ')
+    .replace(/^.*?神奈川県/, '').replace(/^.*?鎌倉市/, '');
+  let best = null;
+  for (const t of BY_JA) {
+    const i = ja.indexOf(t.ja); if (i < 0) continue;
+    const rest = ja.slice(i + t.ja.length);
+    if (t.short && (i !== 0 || !/^([0-9一二三四五六七八九]|$)/.test(rest))) continue;
+    if (!best || i < best.i) best = { t, i, rest };
+  }
+  if (best) {
+    town = best.t;
+    const m = best.rest.match(/^([0-9]+|[一二三四五六七八九十])(丁目)?/);
+    chome = m ? chomeFrom(toNum(m[1]), !!m[2]) : undefined;
+  } else {
+    // Romaji: 2-3-4 Hase, Kamakura / Hase 2-chome
+    const r = raw.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const letters = r.replace(/[^a-z]/g, '');
+    for (const t of BY_RO) {
+      if (t.ro.some(v => t.short ? new RegExp(`(^|[^a-z])${v}([^a-z]|$)`).test(r) : letters.includes(v))) { town = t; break; }
+    }
+    if (!town) return null;
+    const r2 = r.replace(/\b\d{3}-\d{4}\b/, '');
+    let m = r2.match(/(\d+)\s*-?\s*cho?u?me/);
+    if (m) chome = +m[1];
+    else if ((m = r2.match(/(\d+)\s*-\s*\d+/))) chome = chomeFrom(+m[1]);
+    else if ((m = r2.match(/\b(\d+)\b/))) chome = chomeFrom(+m[1]);
+  }
+  const en = town.en || town.ro[0][0].toUpperCase() + town.ro[0].slice(1);
+  const name = `${town.ja} (${en})`;
+  if (town.split) {
+    const [a, b, inD, outD] = town.split;
+    if (typeof chome === 'number') return { name, chome, d: chome >= a && chome <= b ? inD : outD };
+    if (chome === 'none') return { name, d: outD };
+    const range = a === b ? `${a}-chome` : `${a}–${b}-chome`;
+    return { name, ask: `Which part of ${name} do you live in?`, choices: [[`${range} (${a === b ? a : a + '〜' + b}丁目)`, inD], ['Somewhere else in ' + en, outD]] };
+  }
+  if (town.ask) {
+    if (town.hint && town.hint.some(h => raw.toLowerCase().includes(h))) return { name, d: town.choices[0][1] };
+    return { name, ask: town.ask, choices: town.choices };
+  }
+  return { name, d: town.d };
+}
+function renderAddrResult(res) {
+  const out = $('#addr-out');
+  if (!res) { out.innerHTML = `<div class="note">Couldn’t find a Kamakura town name in that address. Try the Japanese address (e.g. 鎌倉市長谷2-3-4), or choose from the list below.</div>`; return; }
+  if (res.ask) {
+    out.innerHTML = `<div class="note">📍 Found <b>${esc(res.name)}</b>. ${esc(res.ask)}<div class="seg" style="margin-top:8px">${res.choices.map(([l, d]) => `<button data-d="${d}">${esc(l)}</button>`).join('')}</div></div>`;
+    $$('#addr-out [data-d]').forEach(b => b.addEventListener('click', () => { setDistrict(b.dataset.d); renderAddrResult({ name: res.name, d: +b.dataset.d }); }));
+    return;
+  }
+  setDistrict(res.d);
+  out.innerHTML = `<div class="note">📍 <b>${esc(res.name)}${res.chome ? ` ${res.chome}-chome` : ''}</b> → district <b>${esc(DISTRICTS[res.d].name)}</b>. Your days are below. Near a district border? Check the sign at your clean station.</div>`;
+}
+$('#addr-go').addEventListener('click', () => renderAddrResult(findDistrict($('#addr').value)));
+$('#addr').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#addr').blur(); renderAddrResult(findDistrict($('#addr').value)); } });
 function renderSchedule() {
   const wk = $('#week'), up = $('#upcoming'), adj = $('#adjust');
   if (!sched) { wk.innerHTML = ''; up.innerHTML = '<p class="muted">Choose your district above.</p>'; adj.hidden = true; renderRemCats(); return; }
